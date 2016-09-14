@@ -39,7 +39,19 @@ The **io:/...** and **actiongroup:...** is everything what you need for the bind
 Only RollerShutter, Dimmer and Switch item are currently supported
 Actiongroups are executed when ON command is received
 
+Add these lines to openhab.cfg and update email and password with your real credentials
+```
+############################## Somfy Tahoma Binding #####################################
+#
+# Efergy Engage account email (login)
+somfytahoma:email=login@domain.com
 
+# Efergy Engage account password
+somfytahoma:password=password
+
+# refresh interval in milliseconds (optional, default to 60000)
+somfytahoma::refresh=60000
+```
 #example
 items file:
 ```
