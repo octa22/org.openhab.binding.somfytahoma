@@ -24,7 +24,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -86,7 +85,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
         login();
         listDevices();
         listActionGroups();
-        setProperlyConfigured(cookie != "");
+        setProperlyConfigured(!cookie.equals(""));
     }
 
     private void listActionGroups() {
@@ -100,7 +99,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
             String oid = ACTION_GROUP+jobject.get("oid").getAsString();
             String label = jobject.get("label").getAsString();
             if (!isBound(oid))
-                sb.append("\tName: " + label + " URL: " + oid + "\n");
+                sb.append("\tName: ").append(label).append(" URL: ").append(oid).append("\n");
         }
         if( sb.length() > 0 )
         {
@@ -110,7 +109,6 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
 
     private String getGroups() {
         String url = null;
-        StringBuilder body = null;
 
         try {
             url = TAHOMA_URL + "getActionGroups";
@@ -119,8 +117,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
             byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
             InputStream response = sendDataToTahomaWithCookie(url, postData);
 
-            String line = readResponse(response);
-            return line;
+            return readResponse(response);
 
         } catch (MalformedURLException e) {
             logger.error("The URL '" + url + "' is malformed: " + e.toString());
@@ -132,7 +129,6 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
 
     private void listDevices() {
         String url = null;
-        StringBuilder body = null;
 
         try {
             url = TAHOMA_URL + "getSetup";
@@ -152,7 +148,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
                     String label = obj.get("label").getAsString();
                     String deviceURL = obj.get("deviceURL").getAsString();
                     if (!isBound(deviceURL))
-                        sb.append("\tName: " + label + " URL: " + deviceURL + "\n");
+                        sb.append("\tName: ").append(label).append(" URL: ").append(deviceURL).append("\n");
                 }
             }
             if( sb.length() > 0 )
@@ -172,16 +168,12 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
         StringBuilder body = new StringBuilder();
         BufferedReader reader = new BufferedReader(new InputStreamReader(response));
 
-        try {
-            while ((line = reader.readLine()) != null) {
-                body.append(line + "\n");
-            }
-            line = body.toString();
-            logger.debug(line);
-            return line;
-        } catch (Exception ex) {
-            throw ex;
+        while ((line = reader.readLine()) != null) {
+            body.append(line).append("\n");
         }
+        line = body.toString();
+        logger.debug(line);
+        return line;
     }
 
     private void readConfiguration(final Map<String, Object> configuration) {
@@ -537,25 +529,21 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
 
     private InputStream sendDataToTahomaWithCookie(String url, byte[] postData) throws Exception {
 
-        try {
-            URL cookieUrl = new URL(url);
-            HttpsURLConnection connection = (HttpsURLConnection) cookieUrl.openConnection();
-            connection.setDoOutput(true);
-            connection.setInstanceFollowRedirects(false);
-            connection.setRequestMethod("POST");
-            connection.setRequestProperty("User-Agent", TAHOMA_AGENT);
-            connection.setRequestProperty("Accept-Language", "de-de");
-            connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
-            connection.setRequestProperty("Content-Length", Integer.toString(postData.length));
-            connection.setUseCaches(false);
-            connection.setRequestProperty("Cookie", cookie);
-            try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
-                wr.write(postData);
-            }
-
-            return connection.getInputStream();
-        } catch (Exception ex) {
-            throw ex;
+        URL cookieUrl = new URL(url);
+        HttpsURLConnection connection = (HttpsURLConnection) cookieUrl.openConnection();
+        connection.setDoOutput(true);
+        connection.setInstanceFollowRedirects(false);
+        connection.setRequestMethod("POST");
+        connection.setRequestProperty("User-Agent", TAHOMA_AGENT);
+        connection.setRequestProperty("Accept-Language", "de-de");
+        connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
+        connection.setRequestProperty("Content-Length", Integer.toString(postData.length));
+        connection.setUseCaches(false);
+        connection.setRequestProperty("Cookie", cookie);
+        try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
+            wr.write(postData);
         }
+
+        return connection.getInputStream();
     }
 }
