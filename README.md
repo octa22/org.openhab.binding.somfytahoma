@@ -36,7 +36,9 @@ e.g.
 ```
 
 The **io:/...** and **actiongroup:...** is everything what you need for the binding
+
 Only RollerShutter, Dimmer and Switch item are currently supported
+
 Actiongroups are executed when ON command is received
 
 Add these lines to openhab.cfg and update email and password with your real credentials
