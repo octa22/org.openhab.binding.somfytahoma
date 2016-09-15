@@ -45,10 +45,10 @@ Add these lines to openhab.cfg and update email and password with your real cred
 ```
 ############################## Somfy Tahoma Binding #####################################
 #
-# Efergy Engage account email (login)
+# Somfy Tahoma account email (login)
 somfytahoma:email=login@domain.com
 
-# Efergy Engage account password
+# Somfy Tahoma account password
 somfytahoma:password=password
 
 # refresh interval in milliseconds (optional, default to 60000)
