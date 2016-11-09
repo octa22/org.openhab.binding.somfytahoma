@@ -278,6 +278,13 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
                     continue;
 
                 int state = getState(deviceUrl);
+                if( state == -1 )
+                {
+                    //relogin
+                    login();
+                    state = getState(deviceUrl);
+                }
+
                 if (provider.getItemState(itemName) != state) {
                     provider.setItemState(itemName, state);
                     eventPublisher.postUpdate(itemName, new PercentType(state));
@@ -520,6 +527,11 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
             }
         } catch (MalformedURLException e) {
             logger.error("The URL '" + url + "' is malformed: " + e.toString());
+        } catch (IOException e) {
+            if(e.toString().contains("Server returned HTTP response code: 401"))
+            {
+                return -1;
+            }
         } catch (Exception e) {
             logger.error("Cannot send Somfy Tahoma getStates command: " + e.toString());
         }
