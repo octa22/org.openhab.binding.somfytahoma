@@ -16,6 +16,4 @@ import org.openhab.core.binding.BindingProvider;
  */
 public interface SomfyTahomaBindingProvider extends BindingProvider {
     String getItemType(String itemName);
-    int getItemState(String itemName);
-    void setItemState(String itemName, int state);
 }

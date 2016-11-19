@@ -12,6 +12,8 @@ import com.google.gson.*;
 import org.apache.commons.lang.StringUtils;
 import org.openhab.binding.somfytahoma.SomfyTahomaBindingProvider;
 import org.openhab.core.binding.AbstractActiveBinding;
+import org.openhab.core.items.ItemNotFoundException;
+import org.openhab.core.items.ItemRegistry;
 import org.openhab.core.library.types.PercentType;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.State;
@@ -50,7 +52,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
      * was called.
      */
     private BundleContext bundleContext;
-
+    private ItemRegistry itemRegistry;
 
     /**
      * the refresh interval which is used to poll values from the SomfyTahoma
@@ -96,14 +98,13 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
         JsonArray jactionGroups = jobject.get("actionGroups").getAsJsonArray();
         for (JsonElement jactionGroup : jactionGroups) {
             jobject = jactionGroup.getAsJsonObject();
-            String oid = ACTION_GROUP+jobject.get("oid").getAsString();
+            String oid = ACTION_GROUP + jobject.get("oid").getAsString();
             String label = jobject.get("label").getAsString();
             if (!isBound(oid))
                 sb.append("\tName: ").append(label).append(" URL: ").append(oid).append("\n");
         }
-        if( sb.length() > 0 )
-        {
-            logger.info("Found unbound Somfy Tahoma action group(s): \n" +  sb.toString());
+        if (sb.length() > 0) {
+            logger.info("Found unbound Somfy Tahoma action group(s): \n" + sb.toString());
         }
     }
 
@@ -151,9 +152,8 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
                         sb.append("\tName: ").append(label).append(" URL: ").append(deviceURL).append("\n");
                 }
             }
-            if( sb.length() > 0 )
-            {
-                logger.info("Found unbound Somfy Tahoma RollerShutter(s): \n" +  sb.toString());
+            if (sb.length() > 0) {
+                logger.info("Found unbound Somfy Tahoma RollerShutter(s): \n" + sb.toString());
             }
         } catch (MalformedURLException e) {
             logger.error("The URL '" + url + "' is malformed: " + e.toString());
@@ -226,21 +226,13 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
         // should be reset when activating this binding again
     }
 
-
-    /**
-     * TODO
-     */
-    protected String getEmail() {
-        return email;
+    public void setItemRegistry(ItemRegistry itemRegistry) {
+        this.itemRegistry = itemRegistry;
     }
 
-    /**
-     * TODO
-     */
-    protected String getPassword() {
-        return password;
+    public void unsetItemRegistry(ItemRegistry itemRegistry) {
+        this.itemRegistry = null;
     }
-
 
     /**
      * @{inheritDoc}
@@ -284,15 +276,20 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
                     login();
                     state = getState(deviceUrl);
                 }
-
-                if (provider.getItemState(itemName) != state) {
-                    provider.setItemState(itemName, state);
-                    eventPublisher.postUpdate(itemName, new PercentType(state));
+                State newState = new PercentType(state);
+                State oldState = null;
+                try {
+                    oldState = itemRegistry.getItem(itemName).getState();
+                    if (!oldState.equals(newState))
+                        eventPublisher.postUpdate(itemName, newState);
+                } catch (ItemNotFoundException e) {
+                    logger.error("Cannot find item " + itemName + " in item registry!");
                 }
+
             }
         }
-
     }
+
 
     private void login() {
         String url = null;

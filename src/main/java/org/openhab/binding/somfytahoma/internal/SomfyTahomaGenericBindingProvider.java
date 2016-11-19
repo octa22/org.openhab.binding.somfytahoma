@@ -63,17 +63,6 @@ public class SomfyTahomaGenericBindingProvider extends AbstractGenericBindingPro
 
     }
 
-    public void setItemState(String itemName, int state) {
-        final SomfyTahomaBindingConfig config = (SomfyTahomaBindingConfig) this.bindingConfigs.get(itemName);
-        config.setState(state);
-    }
-
-    public int getItemState(String itemName) {
-        final SomfyTahomaBindingConfig config = (SomfyTahomaBindingConfig) this.bindingConfigs.get(itemName);
-        return config != null ? (config.getState()) : -1;
-    }
-
-
     public String getItemType(String itemName) {
         final SomfyTahomaBindingConfig config = (SomfyTahomaBindingConfig) this.bindingConfigs.get(itemName);
         return config != null ? (config.getType()) : null;
@@ -89,7 +78,6 @@ public class SomfyTahomaGenericBindingProvider extends AbstractGenericBindingPro
 
         // put member fields here which holds the parsed values
         private String type;
-        private int state=-1;
 
         SomfyTahomaBindingConfig(String type) {
             this.type = type;
@@ -97,14 +85,6 @@ public class SomfyTahomaGenericBindingProvider extends AbstractGenericBindingPro
 
         public String getType() {
             return type;
-        }
-
-        public int getState() {
-            return state;
-        }
-
-        public void setState(int state) {
-            this.state = state;
         }
     }
 
