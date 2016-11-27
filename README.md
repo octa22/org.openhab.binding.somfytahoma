@@ -37,7 +37,8 @@ e.g.
 
 The **io:/...** and **actiongroup:...** is everything what you need for the binding
 
-Only RollerShutter, Dimmer and Switch item are currently supported
+Only RollerShutter, Dimmer, Switch and String item are currently supported.
+The only String item currently supported is "version" - it returns Somfy Tahoma SW version
 
 Actiongroups are executed when ON command is received
 
@@ -57,6 +58,7 @@ somfytahoma::refresh=60000
 #example
 items file:
 ```
+String TahomaVersion "Tahoma version [%s]" (Technical) { somfytahoma="version" }
 Rollershutter Roleta1 "Roleta [%d %%]" (LivingRoom) {somfytahoma="io://1234-4519-8041/11452832", autoupdate="false"
 Dimmer Roleta1D "Roleta dimmer [%.1f]" (LivingRoom) {somfytahoma="io://1234-4519-8041/11452832"}
 Switch Rolety1NPDolu "Rolety 1NP dolu" (FirstFloor) {somfytahoma="actiongroup:e201637b-de3b-4118-b7af-5693811a953c"}

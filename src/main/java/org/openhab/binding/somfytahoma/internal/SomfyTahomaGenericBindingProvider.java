@@ -40,11 +40,11 @@ public class SomfyTahomaGenericBindingProvider extends AbstractGenericBindingPro
     public void validateItemType(Item item, String bindingConfig) throws BindingConfigParseException {
 
 
-        if (!(item instanceof RollershutterItem || item instanceof DimmerItem || item instanceof SwitchItem))
+        if (!(item instanceof RollershutterItem || item instanceof DimmerItem || item instanceof SwitchItem || item instanceof StringItem ))
         {
             throw new BindingConfigParseException("item '" + item.getName()
                     + "' is of type '" + item.getClass().getSimpleName()
-                    + "', only RollershutterItem/DimmerItem/SwitchItem are allowed - please check your *.items configuration");
+                    + "', only RollershutterItem/DimmerItem/SwitchItem/StringItem are allowed - please check your *.items configuration");
         }
     }
 

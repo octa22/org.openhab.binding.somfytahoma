@@ -15,6 +15,7 @@ import org.openhab.core.binding.AbstractActiveBinding;
 import org.openhab.core.items.ItemNotFoundException;
 import org.openhab.core.items.ItemRegistry;
 import org.openhab.core.library.types.PercentType;
+import org.openhab.core.library.types.StringType;
 import org.openhab.core.types.Command;
 import org.openhab.core.types.State;
 import org.osgi.framework.BundleContext;
@@ -266,7 +267,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
         for (final SomfyTahomaBindingProvider provider : providers) {
             for (final String itemName : provider.getItemNames()) {
                 String deviceUrl = provider.getItemType(itemName);
-                if (deviceUrl.startsWith(ACTION_GROUP))
+                if (deviceUrl.startsWith(ACTION_GROUP) || deviceUrl.equals(VERSION))
                     continue;
 
                 int state = getState(deviceUrl);
@@ -329,9 +330,19 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
             boolean success = jobject.get("success").getAsBoolean();
 
             if (success) {
-                String version = jobject.get("version").getAsString();
+                String version = jobject.get(VERSION).getAsString();
                 logger.debug("SomfyTahoma cookie: " + cookie);
                 logger.info("SomfyTahoma version: " + version);
+                String versionItem = getVersionItem();
+                if( versionItem != null && version != null)
+                {
+                    State oldState = itemRegistry.getItem(versionItem).getState();
+                    State newState = new StringType(version);
+                    if( !newState.equals(oldState))
+                    {
+                        eventPublisher.postUpdate(versionItem, newState);
+                    }
+                }
             } else {
                 logger.debug("SomfyTahoma login response: " + line);
                 throw new SomfyTahomaException(line);
@@ -341,6 +352,18 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
         } catch (Exception e) {
             logger.error("Cannot get SomfyTahoma login cookie: " + e.toString());
         }
+    }
+
+    private String getVersionItem() {
+
+        for (final SomfyTahomaBindingProvider provider : providers) {
+            for (final String name : provider.getItemNames()) {
+                if (provider.getItemType(name).equals(VERSION)) {
+                    return name;
+                }
+            }
+        }
+        return null;
     }
 
     /**
