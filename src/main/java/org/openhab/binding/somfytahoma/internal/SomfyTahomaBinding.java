@@ -385,9 +385,77 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
             }
         } else {
             String cmd = getTahomaCommand(command.toString());
+            if(cmd.equals("my"))
+            {
+                //Check if the rollershutter is not moving thus STOP command should be interpreted
+                String executionId = getCurrentExecutions(type);
+                if( executionId != null )
+                {
+                    cancelExecution(executionId);
+                    return;
+                }
+            }
+
             String param = cmd.equals("setClosure") ? "[" + command.toString() + "]" : "[]";
             sendCommand(type, cmd, param);
         }
+    }
+
+    private void cancelExecution(String executionId) {
+        String url = null;
+
+        try {
+            url = DELETE_URL + executionId;
+            sendDeleteToTahomaWithCookie(url);
+
+        } catch (MalformedURLException e) {
+            logger.error("The URL '" + url + "' is malformed: " + e.toString());
+        } catch (Exception e) {
+            logger.error("Cannot send Somfy Tahoma command: " + e.toString());
+        }
+    }
+
+    private String getCurrentExecutions(String type) {
+        String url = null;
+
+        try {
+            url = TAHOMA_URL + "getCurrentExecutions";
+
+            String urlParameters = "";
+            byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
+
+            InputStream response = sendDataToTahomaWithCookie(url, postData);
+            String line = readResponse(response);
+
+            JsonObject jobject = parser.parse(line).getAsJsonObject();
+            JsonArray jarray = jobject.get("executions").getAsJsonArray();
+
+            return parseExecutions(type, jarray);
+
+        } catch (MalformedURLException e) {
+            logger.error("The URL '" + url + "' is malformed: " + e.toString());
+        } catch (Exception e) {
+            logger.error("Cannot send Somfy Tahoma command: " + e.toString());
+        }
+
+        return null;
+    }
+
+    private String parseExecutions(String type, JsonArray executions) {
+        for( JsonElement execution : executions)
+        {
+            JsonObject jobject = execution.getAsJsonObject().get("actionGroup").getAsJsonObject();
+            String execId = execution.getAsJsonObject().get("id").getAsString();
+            JsonArray actions = jobject.get("actions").getAsJsonArray();
+            for( JsonElement action : actions )
+            {
+                jobject = action.getAsJsonObject();
+                if (jobject.get("deviceURL").getAsString().equals(type))
+                    return execId;
+            }
+
+        }
+        return null;
     }
 
     private ArrayList<SomfyTahomaAction> getTahomaActions(String actionGroup) {
@@ -492,14 +560,10 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
         try {
             url = TAHOMA_URL + "apply";
 
-            //String command = getTahomaCommand(cmd.toString());
-            //String param = command.equals("setClosure") ? cmd : "";
             String urlParameters = "{\"actions\": [{\"deviceURL\": \"" + io + "\", \"commands\": [{ \"name\": \"" + command + "\", \"parameters\": " + params + "}]}]}";
             byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
 
-
             InputStream response = sendDataToTahomaWithCookie(url, postData);
-            //BufferedReader reader = new BufferedReader(new InputStreamReader(response));
             String line = readResponse(response);
 
             JsonObject jobject = parser.parse(line).getAsJsonObject();
@@ -575,6 +639,22 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
         try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
             wr.write(postData);
         }
+
+        return connection.getInputStream();
+    }
+
+    private InputStream sendDeleteToTahomaWithCookie(String url) throws Exception {
+
+        URL cookieUrl = new URL(url);
+        HttpsURLConnection connection = (HttpsURLConnection) cookieUrl.openConnection();
+        connection.setDoOutput(true);
+        connection.setInstanceFollowRedirects(false);
+        connection.setRequestMethod("DELETE");
+        connection.setRequestProperty("User-Agent", TAHOMA_AGENT);
+        connection.setRequestProperty("Accept-Language", "de-de");
+        connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
+        connection.setUseCaches(false);
+        connection.setRequestProperty("Cookie", cookie);
 
         return connection.getInputStream();
     }
