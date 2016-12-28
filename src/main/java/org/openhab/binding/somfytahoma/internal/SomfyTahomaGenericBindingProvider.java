@@ -9,13 +9,13 @@
 package org.openhab.binding.somfytahoma.internal;
 
 import org.openhab.binding.somfytahoma.SomfyTahomaBindingProvider;
-import org.openhab.core.binding.BindingConfig;
 import org.openhab.core.items.Item;
-import org.openhab.core.library.items.*;
+import org.openhab.core.library.items.DimmerItem;
+import org.openhab.core.library.items.RollershutterItem;
+import org.openhab.core.library.items.StringItem;
+import org.openhab.core.library.items.SwitchItem;
 import org.openhab.model.item.binding.AbstractGenericBindingProvider;
 import org.openhab.model.item.binding.BindingConfigParseException;
-
-import static org.openhab.binding.somfytahoma.internal.SomfyTahomaConstants.*;
 
 
 /**
@@ -63,30 +63,8 @@ public class SomfyTahomaGenericBindingProvider extends AbstractGenericBindingPro
 
     }
 
-    public String getItemType(String itemName) {
+    public SomfyTahomaBindingConfig getItemConfig(String itemName) {
         final SomfyTahomaBindingConfig config = (SomfyTahomaBindingConfig) this.bindingConfigs.get(itemName);
-        return config != null ? (config.getType()) : null;
+        return config;
     }
-
-    /**
-     * This is a helper class holding binding specific configuration details
-     *
-     * @author opecta@gmail.com
-     * @since 1.0.0-SNAPSHOT
-     */
-    class SomfyTahomaBindingConfig implements BindingConfig {
-
-        // put member fields here which holds the parsed values
-        private String type;
-
-        SomfyTahomaBindingConfig(String type) {
-            this.type = type;
-        }
-
-        public String getType() {
-            return type;
-        }
-    }
-
-
 }

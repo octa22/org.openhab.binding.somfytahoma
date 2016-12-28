@@ -1,7 +1,23 @@
 package org.openhab.binding.somfytahoma.internal;
 
+import org.openhab.core.binding.BindingConfig;
+
 /**
- * Created by Ondřej Pečta on 28. 12. 2016.
+ * This is a helper class holding binding specific configuration details
+ *
+ * @author opecta@gmail.com
+ * @since 1.0.0-SNAPSHOT
  */
-public class SomfyTahomaConfig {
+class SomfyTahomaBindingConfig implements BindingConfig {
+
+    // put member fields here which holds the parsed values
+    private String type;
+
+    SomfyTahomaBindingConfig(String type) {
+        this.type = type;
+    }
+
+    public String getType() {
+        return type;
+    }
 }

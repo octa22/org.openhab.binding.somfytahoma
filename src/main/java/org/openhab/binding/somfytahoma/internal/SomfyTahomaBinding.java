@@ -22,14 +22,13 @@ import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Map;
-
-import javax.net.ssl.HttpsURLConnection;
 
 import static org.openhab.binding.somfytahoma.internal.SomfyTahomaConstants.*;
 
@@ -266,7 +265,12 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
 
         for (final SomfyTahomaBindingProvider provider : providers) {
             for (final String itemName : provider.getItemNames()) {
-                String deviceUrl = provider.getItemType(itemName);
+
+                SomfyTahomaBindingConfig config = (SomfyTahomaBindingConfig) provider.getItemConfig(itemName);
+                if(config == null)
+                    return;
+
+                String deviceUrl = config.getType();
                 if (deviceUrl.startsWith(ACTION_GROUP) || deviceUrl.equals(VERSION))
                     continue;
 
@@ -358,7 +362,10 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
 
         for (final SomfyTahomaBindingProvider provider : providers) {
             for (final String name : provider.getItemNames()) {
-                if (provider.getItemType(name).equals(VERSION)) {
+                SomfyTahomaBindingConfig config = (SomfyTahomaBindingConfig) provider.getItemConfig(name);
+                if(config == null)
+                    continue;
+                if (config.getType().equals(VERSION)) {
                     return name;
                 }
             }
@@ -523,11 +530,12 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
     private String getTahomaDeviceUrl(String itemName) {
 
         for (final SomfyTahomaBindingProvider provider : providers) {
-            for (final String name : provider.getItemNames()) {
-                if (itemName.equals(name)) {
-                    return provider.getItemType(itemName);
-                }
+            if( provider.getItemNames().contains(itemName))
+            {
+               SomfyTahomaBindingConfig config = (SomfyTahomaBindingConfig) provider.getItemConfig(itemName);
+               return config.getType();
             }
+
         }
         return "";
     }
@@ -536,7 +544,11 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
 
         for (final SomfyTahomaBindingProvider provider : providers) {
             for (final String name : provider.getItemNames()) {
-                String type = provider.getItemType(name);
+                SomfyTahomaBindingConfig config = (SomfyTahomaBindingConfig) provider.getItemConfig(name);
+                if(config == null)
+                    continue;
+
+                String type = config.getType();
                 if (type.equals(io))
                     return true;
             }

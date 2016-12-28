@@ -8,6 +8,7 @@
  */
 package org.openhab.binding.somfytahoma;
 
+import org.openhab.core.binding.BindingConfig;
 import org.openhab.core.binding.BindingProvider;
 
 /**
@@ -15,5 +16,5 @@ import org.openhab.core.binding.BindingProvider;
  * @since 1.0.0-SNAPSHOT
  */
 public interface SomfyTahomaBindingProvider extends BindingProvider {
-    String getItemType(String itemName);
+    BindingConfig getItemConfig(String itemName);
 }
