@@ -9,7 +9,7 @@ copy __org.openhab.binding.somfytahoma__ directory to __binding__ directory of O
 build using maven (mvn clean install)
 
 # install
-copy __gson-2.3.1.jar__ to __addons__ directory of OpenHAB (search internet or download here: http://central.maven.org/maven2/com/google/code/gson/gson/2.3.1/gson-2.3.1.jar)
+~~copy gson-2.3.1.jar to addons directory of OpenHAB (search internet or download here: http://central.maven.org/maven2/com/google/code/gson/gson/2.3.1/gson-2.3.1.jar)~~
 
 copy target file __org.openhab.binding.somfytahoma.jar__ to __addons__ directory of OpenHAB distribution
 
