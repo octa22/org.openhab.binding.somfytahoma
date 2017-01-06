@@ -267,7 +267,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
             for (final String itemName : provider.getItemNames()) {
 
                 SomfyTahomaBindingConfig config = (SomfyTahomaBindingConfig) provider.getItemConfig(itemName);
-                if(config == null)
+                if (config == null)
                     return;
 
                 String deviceUrl = config.getType();
@@ -275,8 +275,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
                     continue;
 
                 int state = getState(deviceUrl);
-                if( state == -1 )
-                {
+                if (state == -1) {
                     //relogin
                     login();
                     state = getState(deviceUrl);
@@ -338,12 +337,10 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
                 logger.debug("SomfyTahoma cookie: " + cookie);
                 logger.info("SomfyTahoma version: " + version);
                 String versionItem = getVersionItem();
-                if( versionItem != null && version != null)
-                {
+                if (versionItem != null && version != null) {
                     State oldState = itemRegistry.getItem(versionItem).getState();
                     State newState = new StringType(version);
-                    if( !newState.equals(oldState))
-                    {
+                    if (!newState.equals(oldState)) {
                         eventPublisher.postUpdate(versionItem, newState);
                     }
                 }
@@ -363,7 +360,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
         for (final SomfyTahomaBindingProvider provider : providers) {
             for (final String name : provider.getItemNames()) {
                 SomfyTahomaBindingConfig config = (SomfyTahomaBindingConfig) provider.getItemConfig(name);
-                if(config == null)
+                if (config == null)
                     continue;
                 if (config.getType().equals(VERSION)) {
                     return name;
@@ -392,19 +389,18 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
             }
         } else {
             String cmd = getTahomaCommand(command.toString());
-            if(cmd.equals("my"))
-            {
-                //Check if the rollershutter is not moving thus STOP command should be interpreted
-                String executionId = getCurrentExecutions(type);
-                if( executionId != null )
-                {
+            //Check if the rollershutter is not moving
+            String executionId = getCurrentExecutions(type);
+            if (executionId != null) {
+                //STOP command should be interpreted if rollershutter moving
+                //otherwise do nothing
+                if (cmd.equals("my")) {
                     cancelExecution(executionId);
-                    return;
                 }
+            } else {
+                String param = cmd.equals("setClosure") ? "[" + command.toString() + "]" : "[]";
+                sendCommand(type, cmd, param);
             }
-
-            String param = cmd.equals("setClosure") ? "[" + command.toString() + "]" : "[]";
-            sendCommand(type, cmd, param);
         }
     }
 
@@ -449,13 +445,11 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
     }
 
     private String parseExecutions(String type, JsonArray executions) {
-        for( JsonElement execution : executions)
-        {
+        for (JsonElement execution : executions) {
             JsonObject jobject = execution.getAsJsonObject().get("actionGroup").getAsJsonObject();
             String execId = execution.getAsJsonObject().get("id").getAsString();
             JsonArray actions = jobject.get("actions").getAsJsonArray();
-            for( JsonElement action : actions )
-            {
+            for (JsonElement action : actions) {
                 jobject = action.getAsJsonObject();
                 if (jobject.get("deviceURL").getAsString().equals(type))
                     return execId;
@@ -530,10 +524,9 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
     private String getTahomaDeviceUrl(String itemName) {
 
         for (final SomfyTahomaBindingProvider provider : providers) {
-            if( provider.getItemNames().contains(itemName))
-            {
-               SomfyTahomaBindingConfig config = (SomfyTahomaBindingConfig) provider.getItemConfig(itemName);
-               return config.getType();
+            if (provider.getItemNames().contains(itemName)) {
+                SomfyTahomaBindingConfig config = (SomfyTahomaBindingConfig) provider.getItemConfig(itemName);
+                return config.getType();
             }
 
         }
@@ -545,7 +538,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
         for (final SomfyTahomaBindingProvider provider : providers) {
             for (final String name : provider.getItemNames()) {
                 SomfyTahomaBindingConfig config = (SomfyTahomaBindingConfig) provider.getItemConfig(name);
-                if(config == null)
+                if (config == null)
                     continue;
 
                 String type = config.getType();
@@ -624,8 +617,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
         } catch (MalformedURLException e) {
             logger.error("The URL '" + url + "' is malformed: " + e.toString());
         } catch (IOException e) {
-            if(e.toString().contains("Server returned HTTP response code: 401"))
-            {
+            if (e.toString().contains("Server returned HTTP response code: 401")) {
                 return -1;
             }
         } catch (Exception e) {
