@@ -84,10 +84,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
 
 
         readConfiguration(configuration);
-        login();
-        listDevices();
-        listActionGroups();
-        setProperlyConfigured(!cookie.equals(""));
+        setProperlyConfigured(true);
     }
 
     private void listActionGroups() {
@@ -261,6 +258,16 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
         if (!bindingsExist()) {
             logger.debug("There is no existing Somfy Tahoma binding configuration => refresh cycle aborted!");
             return;
+        }
+
+        if(cookie.equals(""))
+        {
+            //still not initialized
+            login();
+            if( cookie.equals(""))
+                return;
+            listDevices();
+            listActionGroups();
         }
 
         for (final SomfyTahomaBindingProvider provider : providers) {
