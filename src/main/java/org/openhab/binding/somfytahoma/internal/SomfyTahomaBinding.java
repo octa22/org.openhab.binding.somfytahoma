@@ -62,10 +62,11 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
     private String email;
     private String password;
     private String cookie = "";
+    private boolean loggedIn = false;
 
     //Gson parser
     private JsonParser parser = new JsonParser();
-
+        
     public SomfyTahomaBinding() {
     }
 
@@ -101,7 +102,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
                 sb.append("\tName: ").append(label).append(" URL: ").append(oid).append("\n");
         }
         if (sb.length() > 0) {
-            logger.info("Found unbound Somfy Tahoma action group(s): \n" + sb.toString());
+            logger.info("Found unbound action group(s): \n" + sb.toString());
         }
     }
 
@@ -119,8 +120,14 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
 
         } catch (MalformedURLException e) {
             logger.error("The URL '" + url + "' is malformed: " + e.toString());
-        } catch (Exception e) {
-            logger.error("Cannot send Somfy Tahoma getSetup command: " + e.toString());
+        } catch (IOException e) {
+            if (e.toString().contains(UNAUTHORIZED)) {
+                loggedIn = false;
+            }
+            logger.error("Cannot send getActionGroups command: " + e.toString());
+        } 
+        catch (Exception e) {
+            logger.error("Cannot send getActionGroups command: " + e.toString());
         }
         return "";
     }
@@ -150,12 +157,18 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
                 }
             }
             if (sb.length() > 0) {
-                logger.info("Found unbound Somfy Tahoma RollerShutter(s): \n" + sb.toString());
+                logger.info("Found unbound rollerShutter(s): \n" + sb.toString());
             }
         } catch (MalformedURLException e) {
             logger.error("The URL '" + url + "' is malformed: " + e.toString());
-        } catch (Exception e) {
-            logger.error("Cannot send Somfy Tahoma getSetup command: " + e.toString());
+        } catch (IOException e) {
+            if (e.toString().contains(UNAUTHORIZED)) {
+                loggedIn = false;
+            }
+            logger.error("Cannot send listDevices command: " + e.toString());
+        } 
+        catch (Exception e) {
+            logger.error("Cannot send listDevices command: " + e.toString());
         }
 
     }
@@ -253,23 +266,29 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
     @Override
     protected void execute() {
         // the frequently executed code (polling) goes here ...
-        logger.debug("execute() method is called!");
+        //logger.debug("execute() method is called!");
 
         if (!bindingsExist()) {
             logger.debug("There is no existing Somfy Tahoma binding configuration => refresh cycle aborted!");
             return;
         }
 
-        if(cookie.equals(""))
-        {
-            //still not initialized
-            login();
-            if( cookie.equals(""))
-                return;
-            listDevices();
-            listActionGroups();
+        try {
+            if (!loggedIn) {
+                login();
+                if( loggedIn ) {
+                    listDevices();
+                    listActionGroups();
+                }
+            }
+            updateTahomaStates();
+        } catch (Exception ex) {
+            logger.error(ex.toString());
+            loggedIn = false;
         }
+    }
 
+    private void updateTahomaStates() {
         for (final SomfyTahomaBindingProvider provider : providers) {
             for (final String itemName : provider.getItemNames()) {
 
@@ -351,14 +370,16 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
                         eventPublisher.postUpdate(versionItem, newState);
                     }
                 }
+                loggedIn = true;
             } else {
-                logger.debug("SomfyTahoma login response: " + line);
+                logger.debug("Login response: " + line);
+                loggedIn = false;
                 throw new SomfyTahomaException(line);
             }
         } catch (MalformedURLException e) {
             logger.error("The URL '" + url + "' is malformed: " + e.toString());
         } catch (Exception e) {
-            logger.error("Cannot get SomfyTahoma login cookie: " + e.toString());
+            logger.error("Cannot get login cookie: " + e.toString());
         }
     }
 
@@ -420,8 +441,13 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
 
         } catch (MalformedURLException e) {
             logger.error("The URL '" + url + "' is malformed: " + e.toString());
+        } catch (IOException e) {
+            if (e.toString().contains(UNAUTHORIZED)) {
+                loggedIn = false;
+            }
+            logger.error("Cannot cancel execution: " + e.toString());
         } catch (Exception e) {
-            logger.error("Cannot send Somfy Tahoma command: " + e.toString());
+            logger.error("Cannot cancel execution: " + e.toString());
         }
     }
 
@@ -444,8 +470,13 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
 
         } catch (MalformedURLException e) {
             logger.error("The URL '" + url + "' is malformed: " + e.toString());
+        } catch (IOException e) {
+            if (e.toString().contains(UNAUTHORIZED)) {
+                loggedIn = false;
+            }
+            logger.error("Cannot send getCurrentExecutions command: " + e.toString());
         } catch (Exception e) {
-            logger.error("Cannot send Somfy Tahoma command: " + e.toString());
+            logger.error("Cannot send getCurrentExecutions command: " + e.toString());
         }
 
         return null;
@@ -461,7 +492,6 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
                 if (jobject.get("deviceURL").getAsString().equals(type))
                     return execId;
             }
-
         }
         return null;
     }
@@ -524,7 +554,6 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
         // event bus goes here. This method is only called if one of the
         // BindingProviders provide a binding for the given 'itemName'.
         logger.info("internalReceiveUpdate({},{}) is called!", itemName, newState);
-
     }
 
 
@@ -582,15 +611,21 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
             String execId = jobject.get("execId").getAsString();
 
             if (!"".equals(execId)) {
-                logger.debug("Somfy Tahoma exec id: " + execId);
+                logger.debug("Exec id: " + execId);
             } else {
-                logger.debug("Somfy Tahoma command response: " + line);
+                logger.debug("Command response: " + line);
                 throw new SomfyTahomaException(line);
             }
         } catch (MalformedURLException e) {
             logger.error("The URL '" + url + "' is malformed: " + e.toString());
-        } catch (Exception e) {
-            logger.error("Cannot send Somfy Tahoma command: " + e.toString());
+        } catch (IOException e) {
+            if (e.toString().contains(UNAUTHORIZED)) {
+                loggedIn = false;
+            }
+            logger.error("Cannot send apply command: " + e.toString());
+        }
+        catch (Exception e) {
+            logger.error("Cannot send apply command: " + e.toString());
         }
     }
 
@@ -599,14 +634,11 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
 
         try {
             url = TAHOMA_URL + "getStates";
-            //String urlParameters  = "[{\"deviceURL\": \""+ io + "\", \"states\": [{\"name\": \"core:OpenClosedState\"}]}]";
             String urlParameters = "[{\"deviceURL\": \"" + io + "\", \"states\": [{\"name\": \"core:ClosureState\"}]}]";
 
             byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
 
             InputStream response = sendDataToTahomaWithCookie(url, postData);
-
-            //BufferedReader reader = new BufferedReader(new InputStreamReader(response));
             String line = readResponse(response);
 
             JsonObject jobject = parser.parse(line).getAsJsonObject();
@@ -615,20 +647,21 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
             int state = jobject.get("value").getAsInt();
 
             if (state >= 0) {
-                logger.debug("Somfy Tahoma state: " + state);
+                logger.debug("State: " + state);
                 return state;
             } else {
-                logger.debug("Somfy Tahoma getState response: " + line);
+                logger.debug("GetState response: " + line);
                 throw new SomfyTahomaException(line);
             }
         } catch (MalformedURLException e) {
             logger.error("The URL '" + url + "' is malformed: " + e.toString());
         } catch (IOException e) {
-            if (e.toString().contains("Server returned HTTP response code: 401")) {
+            if (e.toString().contains(UNAUTHORIZED)) {
+                loggedIn = false;
                 return -1;
             }
         } catch (Exception e) {
-            logger.error("Cannot send Somfy Tahoma getStates command: " + e.toString());
+            logger.error("Cannot send getStates command: " + e.toString());
         }
 
         return 0;
