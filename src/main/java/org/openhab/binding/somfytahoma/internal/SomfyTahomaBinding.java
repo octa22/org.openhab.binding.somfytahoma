@@ -66,7 +66,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
 
     //Gson parser
     private JsonParser parser = new JsonParser();
-        
+
     public SomfyTahomaBinding() {
     }
 
@@ -125,8 +125,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
                 loggedIn = false;
             }
             logger.error("Cannot send getActionGroups command: " + e.toString());
-        } 
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error("Cannot send getActionGroups command: " + e.toString());
         }
         return "";
@@ -166,8 +165,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
                 loggedIn = false;
             }
             logger.error("Cannot send listDevices command: " + e.toString());
-        } 
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error("Cannot send listDevices command: " + e.toString());
         }
 
@@ -232,9 +230,21 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
      */
     public void deactivate(final int reason) {
         this.bundleContext = null;
+        logout();
         // deallocate resources here that are no longer needed and
         // should be reset when activating this binding again
     }
+
+    private void logout() {
+        try {
+            sendToTahomaWithCookie(TAHOMA_URL + "logout");
+            cookie = "";
+            loggedIn = false;
+        } catch (Exception e) {
+            logger.error("Cannot send logout command!");
+        }
+    }
+
 
     public void setItemRegistry(ItemRegistry itemRegistry) {
         this.itemRegistry = itemRegistry;
@@ -276,7 +286,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
         try {
             if (!loggedIn) {
                 login();
-                if( loggedIn ) {
+                if (loggedIn) {
                     listDevices();
                     listActionGroups();
                 }
@@ -315,7 +325,6 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
                 } catch (ItemNotFoundException e) {
                     logger.error("Cannot find item " + itemName + " in item registry!");
                 }
-
             }
         }
     }
@@ -332,13 +341,9 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
             URL cookieUrl = new URL(url);
             HttpsURLConnection connection = (HttpsURLConnection) cookieUrl.openConnection();
             connection.setDoOutput(true);
-            connection.setInstanceFollowRedirects(false);
             connection.setRequestMethod("POST");
-            connection.setRequestProperty("User-Agent", TAHOMA_AGENT);
-            connection.setRequestProperty("Accept-Language", "de-de");
-            connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
+            setConnectionDefaults(connection);
             connection.setRequestProperty("Content-Length", Integer.toString(postData.length));
-            connection.setUseCaches(false);
             try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
                 wr.write(postData);
             }
@@ -623,8 +628,7 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
                 loggedIn = false;
             }
             logger.error("Cannot send apply command: " + e.toString());
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             logger.error("Cannot send apply command: " + e.toString());
         }
     }
@@ -672,13 +676,9 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
         URL cookieUrl = new URL(url);
         HttpsURLConnection connection = (HttpsURLConnection) cookieUrl.openConnection();
         connection.setDoOutput(true);
-        connection.setInstanceFollowRedirects(false);
         connection.setRequestMethod("POST");
-        connection.setRequestProperty("User-Agent", TAHOMA_AGENT);
-        connection.setRequestProperty("Accept-Language", "de-de");
-        connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
+        setConnectionDefaults(connection);
         connection.setRequestProperty("Content-Length", Integer.toString(postData.length));
-        connection.setUseCaches(false);
         connection.setRequestProperty("Cookie", cookie);
         try (DataOutputStream wr = new DataOutputStream(connection.getOutputStream())) {
             wr.write(postData);
@@ -687,19 +687,35 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
         return connection.getInputStream();
     }
 
+    private InputStream sendToTahomaWithCookie(String url) throws Exception {
+
+        URL cookieUrl = new URL(url);
+        HttpsURLConnection connection = (HttpsURLConnection) cookieUrl.openConnection();
+        connection.setDoOutput(false);
+        connection.setRequestMethod("GET");
+        setConnectionDefaults(connection);
+        connection.setRequestProperty("Cookie", cookie);
+
+        return connection.getInputStream();
+    }
+
     private InputStream sendDeleteToTahomaWithCookie(String url) throws Exception {
 
         URL cookieUrl = new URL(url);
         HttpsURLConnection connection = (HttpsURLConnection) cookieUrl.openConnection();
-        connection.setDoOutput(true);
-        connection.setInstanceFollowRedirects(false);
+        connection.setDoOutput(false);
         connection.setRequestMethod("DELETE");
+        setConnectionDefaults(connection);
+        connection.setRequestProperty("Cookie", cookie);
+
+        return connection.getInputStream();
+    }
+
+    private void setConnectionDefaults(HttpsURLConnection connection) {
+        connection.setInstanceFollowRedirects(false);
         connection.setRequestProperty("User-Agent", TAHOMA_AGENT);
         connection.setRequestProperty("Accept-Language", "de-de");
         connection.setRequestProperty("Accept-Encoding", "gzip, deflate");
         connection.setUseCaches(false);
-        connection.setRequestProperty("Cookie", cookie);
-
-        return connection.getInputStream();
     }
 }
