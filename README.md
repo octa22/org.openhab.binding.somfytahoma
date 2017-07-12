@@ -11,11 +11,9 @@ copy __org.openhab.binding.somfytahoma__ directory to __binding__ directory of O
 build using maven (mvn clean install)
 
 # install
-~~copy gson-2.3.1.jar to addons directory of OpenHAB (search internet or download here: http://central.maven.org/maven2/com/google/code/gson/gson/2.3.1/gson-2.3.1.jar)~~
-
 copy target file __org.openhab.binding.somfytahoma.jar__ to __addons__ directory of OpenHAB distribution
 
-#usage
+# usage
 this binding supports auto discovery of possible items to bind - both rolleshutters and actionbindings during binding initialization
 e.g.
 ```
@@ -44,6 +42,7 @@ The only String item currently supported is "version" - it returns Somfy Tahoma 
 
 Actiongroups are executed when ON command is received
 
+# configuration in OH1
 Add these lines to openhab.cfg and update email and password with your real credentials
 ```
 ############################## Somfy Tahoma Binding #####################################
@@ -57,7 +56,12 @@ somfytahoma:password=password
 # refresh interval in milliseconds (optional, default to 60000)
 somfytahoma::refresh=60000
 ```
-#example
+
+# configuration in OH2
+After adding the .jar release file to OH2 addons directory go to paper UI, where Somfy Tahoma Binding tile should appear in Configuration/Bindings menu.
+Configure valid login and password to www.tahomalink.com via the binding Configuration button, save credentials and restart OH2.
+
+# example (valid for OH1, OH2)
 items file:
 ```
 String TahomaVersion "Tahoma version [%s]" (Technical) { somfytahoma="version" }
