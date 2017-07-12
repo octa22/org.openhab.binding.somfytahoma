@@ -3,6 +3,8 @@ Somfy Tahoma binding for OpenHAB v1.x
 
 Currently supports controlling of rollershutters & actionbindings
 
+It should be working also for Connexoom device since it is using the same API
+
 # build
 copy __org.openhab.binding.somfytahoma__ directory to __binding__ directory of OpenHAB source code (https://github.com/openhab/openhab)
 
