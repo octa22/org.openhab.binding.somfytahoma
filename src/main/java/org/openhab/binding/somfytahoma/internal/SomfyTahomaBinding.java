@@ -210,7 +210,9 @@ public class SomfyTahomaBinding extends AbstractActiveBinding<SomfyTahomaBinding
      */
     public void modified(final Map<String, Object> configuration) {
         // update the internal configuration accordingly
-        readConfiguration(configuration);
+        if (configuration != null) {
+            readConfiguration(configuration);
+        }
     }
 
     /**
