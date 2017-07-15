@@ -1,5 +1,7 @@
 # org.openhab.binding.somfytahoma
 Somfy Tahoma binding for OpenHAB v1.x
+If you are looking for a OpenHAB 2.x version of this binding, plese see this
+https://github.com/octa22/openhab2-addons/tree/master/addons/binding/org.openhab.binding.somfytahoma
 
 Currently supports controlling of rollershutters & actionbindings
 
